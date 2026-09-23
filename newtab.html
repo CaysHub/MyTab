@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="images/chrome.svg" type="image/svg+xml">
+  <title>最近访问</title>
+</head>
+<body>
+  <canvas id="geometry-canvas" aria-hidden="true"></canvas>
+  <main class="page-shell">
+    <header class="page-header">
+      <h1>最近访问</h1>
+      <div class="calendar">
+        <time id="date-time" class="date-time"><span id="date-label"></span><span id="clock"></span></time>
+        <div class="calendar-details"><span id="lunar-date"></span><span id="holiday-status"></span></div>
+      </div>
+    </header>
+    <div id="recent-sites" class="recent-sites" aria-live="polite">
+      <div class="loading">加载中...</div>
+    </div>
+  </main>
+  <script src="geometry.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

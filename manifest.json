@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "NewTab",
+    "version": "1.1",
+    "description": "新标签页 - 支持Cookie复制",
+    "icons": {
+        "16": "images/chrome16.png",
+        "32": "images/chrome32.png",
+        "48": "images/chrome48.png",
+        "128": "images/chrome128.png"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "images/chrome16.png",
+            "32": "images/chrome32.png",
+            "48": "images/chrome48.png",
+            "128": "images/chrome128.png"
+        }
+    },
+    "permissions": [
+        "cookies",
+        "tabs",
+        "activeTab",
+        "history"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "chrome_url_overrides": {
+        "newtab": "newtab.html"
+    }
+}

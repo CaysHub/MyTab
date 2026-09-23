@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h3>🍪 Cookie 复制工具</h3>
+
+    <div class="section">
+      <label for="tab-select">选择来源标签页：</label>
+      <select id="tab-select">
+        <option value="">-- 请选择标签页 --</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label for="cookie-list">该页面的 Cookies：</label>
+      <div id="cookie-list" class="cookie-list">
+        <div class="empty-tip">请先选择标签页</div>
+      </div>
+    </div>
+
+    <div class="section actions">
+      <button id="refresh-btn" class="btn-secondary">🔄 刷新标签页</button>
+      <button id="copy-all-btn" class="btn-primary" disabled>📋 复制全部到当前页</button>
+    </div>
+
+    <div class="section actions">
+      <button id="delete-all-btn" class="btn-danger" disabled>🗑️ 删除选中页全部Cookie</button>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
