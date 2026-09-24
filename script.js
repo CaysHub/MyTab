@@ -261,9 +261,10 @@ function initBookmarks(tabs, container) {
     });
   });
 
-  function render(groups) {
-    const selected = groups.find(group => group.id === selectedId) || groups[0];
+  function render(groups, nextId = selectedId) {
+    const selected = groups.find(group => group.id === nextId) || groups[0];
     const hadTabFocus = tabs.contains(document.activeElement);
+    const changedTab = selected.id !== selectedId;
     selectedId = selected.id;
     tabs.replaceChildren();
     for (const group of groups) {
@@ -284,14 +285,14 @@ function initBookmarks(tabs, container) {
       count.textContent = group.items.length;
       tab.append(label, count);
       tab.addEventListener('click', () => {
-        selectedId = group.id;
-        render(groups);
+        render(groups, group.id);
         document.getElementById(`bookmark-tab-${group.id}`).focus();
       });
       tabs.appendChild(tab);
     }
     container.setAttribute('aria-labelledby', `bookmark-tab-${selectedId}`);
     renderBookmarks(selected.items, container, { openEdit, openMove, openDelete });
+    if (changedTab) container.scrollTop = 0;
     if (hadTabFocus) document.getElementById(`bookmark-tab-${selectedId}`).focus();
   }
 

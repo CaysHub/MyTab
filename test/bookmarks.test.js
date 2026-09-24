@@ -140,8 +140,10 @@ test('switching tabs flattens bookmarks, handles empty folders and blocks script
   assert.equal(sites.children[3].children[0].tag, 'span');
   assert.equal(sites.children[3].children[0].href, undefined);
 
+  sites.scrollTop = 200;
   tabs.children[1].click();
   assert.deepEqual(titles(sites), ['项目', '文档', '脚本']);
+  assert.equal(sites.scrollTop, 0);
   assert.equal(tabs.children[1].attributes['aria-selected'], 'true');
   tabs.listeners.keydown({ key: 'ArrowRight', preventDefault() {} });
   assert.equal(sites.children[0].textContent, '暂无书签');
@@ -152,6 +154,7 @@ test('bookmark changes reload content while retaining the selected folder and ig
   const tabs = elements.get('bookmark-tabs');
   const sites = elements.get('bookmark-sites');
   tabs.children[1].click();
+  sites.scrollTop = 120;
   events.onCreated();
   events.onChanged();
   assert.equal(requests.length, 2);
@@ -159,6 +162,7 @@ test('bookmark changes reload content while retaining the selected folder and ig
     ...bar.children[1], children: [{ id: 'new-link', title: '新书签', url: 'https://new.example/' }]
   }, bar.children[2]] }]);
   assert.deepEqual(titles(sites), ['新书签']);
+  assert.equal(sites.scrollTop, 120);
   assert.equal(tabs.children[1].attributes['aria-selected'], 'true');
   assert.equal(tabs.contains(document.activeElement), true);
   requests.pop()([bar]);
@@ -169,10 +173,12 @@ test('removing a selected folder falls back to all bookmarks', () => {
   const { elements, events, requests } = setup();
   const tabs = elements.get('bookmark-tabs');
   tabs.children[1].click();
+  elements.get('bookmark-sites').scrollTop = 120;
   events.onRemoved();
   requests.shift()([{ ...bar, children: [bar.children[0], bar.children[2]] }]);
   assert.deepEqual(titles(elements.get('bookmark-sites')), ['根目录']);
   assert.equal(tabs.children[0].attributes['aria-selected'], 'true');
+  assert.equal(elements.get('bookmark-sites').scrollTop, 0);
 });
 
 function submit(elements, name) {
