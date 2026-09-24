@@ -5,22 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="images/chrome.svg" type="image/svg+xml">
-  <title>最近访问</title>
+  <title>我的书签</title>
 </head>
 <body>
   <canvas id="geometry-canvas" aria-hidden="true"></canvas>
   <main class="page-shell">
     <header class="page-header">
-      <h1>最近访问</h1>
+      <h1>我的书签</h1>
       <div class="calendar">
         <time id="date-time" class="date-time"><span id="date-label"></span><span id="clock"></span></time>
         <div class="calendar-details"><span id="lunar-date"></span><span id="holiday-status"></span></div>
       </div>
     </header>
-    <div id="recent-sites" class="recent-sites" aria-live="polite">
+    <nav id="bookmark-tabs" class="bookmark-tabs" role="tablist" aria-label="书签目录"></nav>
+    <div id="bookmark-sites" class="bookmark-sites" role="tabpanel" aria-live="polite">
       <div class="loading">加载中...</div>
     </div>
   </main>
+  <dialog id="edit-dialog" class="bookmark-dialog" aria-labelledby="edit-heading">
+    <form id="edit-form">
+      <h2 id="edit-heading">编辑书签</h2>
+      <label for="edit-title">名称</label>
+      <input id="edit-title" type="text" required>
+      <label for="edit-url">网址</label>
+      <input id="edit-url" type="text" required spellcheck="false">
+      <p id="edit-error" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="dialog-cancel">取消</button>
+        <button type="submit" class="dialog-primary">保存</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="move-dialog" class="bookmark-dialog" aria-labelledby="move-heading">
+    <form id="move-form">
+      <h2 id="move-heading">移动书签</h2>
+      <p id="move-name" class="dialog-description"></p>
+      <label for="move-folder">目标文件夹</label>
+      <select id="move-folder"></select>
+      <label for="move-position">插入位置</label>
+      <select id="move-position"></select>
+      <p id="move-error" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="dialog-cancel">取消</button>
+        <button type="submit" class="dialog-primary">移动</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="delete-dialog" class="bookmark-dialog" aria-labelledby="delete-heading">
+    <form id="delete-form">
+      <h2 id="delete-heading">删除书签？</h2>
+      <p id="delete-name" class="dialog-description"></p>
+      <p class="delete-warning">确认后会从浏览器书签中删除。</p>
+      <p id="delete-error" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="dialog-cancel">取消</button>
+        <button type="submit" class="dialog-danger">确认删除</button>
+      </div>
+    </form>
+  </dialog>
   <script src="geometry.js"></script>
   <script src="script.js"></script>
 </body>
