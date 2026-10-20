@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="images/chrome.svg" type="image/svg+xml">
   <title>我的书签</title>
@@ -11,13 +13,36 @@
   <canvas id="geometry-canvas" aria-hidden="true"></canvas>
   <main class="page-shell">
     <header class="page-header">
-      <h1>我的书签</h1>
+      <div class="heading-group">
+        <h1>我的书签</h1>
+        <section id="weather" class="weather" aria-label="当前位置天气" aria-busy="true">
+          <div class="weather-main">
+            <button id="weather-location" class="weather-location" type="button" title="切换天气位置" aria-haspopup="dialog">当前位置</button>
+            <span id="weather-temperature" class="weather-temperature"></span>
+            <span id="weather-condition"></span>
+            <button id="weather-refresh" class="weather-refresh" type="button" aria-label="刷新天气" title="刷新天气" disabled>↻</button>
+          </div>
+          <div id="weather-status" class="weather-status" role="status" aria-live="polite">正在定位…</div>
+          <div id="weather-details" class="weather-details" hidden>
+            <span id="weather-wind"></span><span id="weather-humidity"></span>
+            <span id="weather-updated"></span>
+            <a href="https://uapis.cn/docs/api-reference/get-misc-weather" target="_blank" rel="noopener noreferrer">UAPI</a>
+          </div>
+        </section>
+      </div>
       <div class="calendar">
         <time id="date-time" class="date-time"><span id="date-label"></span><span id="clock"></span></time>
         <div class="calendar-details"><span id="lunar-date"></span><span id="holiday-status"></span></div>
       </div>
     </header>
-    <nav id="bookmark-tabs" class="bookmark-tabs" role="tablist" aria-label="书签目录"></nav>
+    <div class="bookmark-toolbar">
+      <nav id="bookmark-tabs" class="bookmark-tabs" role="tablist" aria-label="书签目录"></nav>
+      <div class="folder-actions" role="group" aria-label="书签目录管理">
+        <button id="add-folder" type="button" class="folder-action" disabled>＋ 新增目录</button>
+        <button id="rename-folder" type="button" class="folder-action" disabled>重命名</button>
+        <button id="remove-folder" type="button" class="folder-action folder-action-danger" disabled>删除目录</button>
+      </div>
+    </div>
     <div id="bookmark-sites" class="bookmark-sites" role="tabpanel" aria-live="polite">
       <div class="loading">加载中...</div>
     </div>
@@ -63,7 +88,48 @@
       </div>
     </form>
   </dialog>
+  <dialog id="folder-dialog" class="bookmark-dialog" aria-labelledby="folder-heading">
+    <form id="folder-form">
+      <h2 id="folder-heading">新增书签目录</h2>
+      <p class="dialog-description">目录会同步到浏览器书签栏，并显示为首页标签。</p>
+      <label for="folder-title">目录名称</label>
+      <input id="folder-title" type="text" required>
+      <p id="folder-error" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="dialog-cancel">取消</button>
+        <button id="folder-submit" type="submit" class="dialog-primary">创建</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="delete-folder-dialog" class="bookmark-dialog" aria-labelledby="delete-folder-heading">
+    <form id="delete-folder-form">
+      <h2 id="delete-folder-heading">删除书签目录？</h2>
+      <p id="delete-folder-name" class="dialog-description"></p>
+      <p id="delete-folder-warning" class="delete-warning"></p>
+      <p id="delete-folder-error" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="dialog-cancel">取消</button>
+        <button type="submit" class="dialog-danger">确认删除目录</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="weather-dialog" class="bookmark-dialog" aria-labelledby="weather-heading">
+    <form id="weather-form">
+      <h2 id="weather-heading">天气位置</h2>
+      <p class="dialog-description">使用当前位置，或输入城市、区县名称查询天气。</p>
+      <button id="weather-use-location" class="weather-use-location" type="button">使用当前位置</button>
+      <label for="weather-city">城市 / 区县</label>
+      <input id="weather-city" type="text" placeholder="例如：杭州市、北京市海淀区" maxlength="50" autocomplete="off">
+      <p class="dialog-description">定位查询会向 UAPI 发送约百米精度的经纬度；手动查询仅发送城市名称。</p>
+      <p id="weather-error" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="weather-cancel" type="button">取消</button>
+        <button id="weather-submit" type="submit" class="dialog-primary">查询天气</button>
+      </div>
+    </form>
+  </dialog>
   <script src="geometry.js"></script>
   <script src="script.js"></script>
+  <script src="weather.js"></script>
 </body>
 </html>

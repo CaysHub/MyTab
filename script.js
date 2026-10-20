@@ -121,6 +121,8 @@ function initBookmarks(tabs, container) {
   let editItem;
   let moveItem;
   let deleteItem;
+  let editingFolderId = null;
+  let deletingFolderId;
   const editDialog = document.getElementById('edit-dialog');
   const moveDialog = document.getElementById('move-dialog');
   const deleteDialog = document.getElementById('delete-dialog');
@@ -129,15 +131,23 @@ function initBookmarks(tabs, container) {
   const deleteError = document.getElementById('delete-error');
   const folderSelect = document.getElementById('move-folder');
   const positionSelect = document.getElementById('move-position');
+  const addFolder = document.getElementById('add-folder');
+  const renameFolder = document.getElementById('rename-folder');
+  const removeFolder = document.getElementById('remove-folder');
+  const folderDialog = document.getElementById('folder-dialog');
+  const folderError = document.getElementById('folder-error');
+  const folderTitle = document.getElementById('folder-title');
+  const deleteFolderDialog = document.getElementById('delete-folder-dialog');
+  const deleteFolderError = document.getElementById('delete-folder-error');
 
-  for (const dialog of [editDialog, moveDialog, deleteDialog]) {
+  for (const dialog of [editDialog, moveDialog, deleteDialog, folderDialog, deleteFolderDialog]) {
     dialog.querySelector('.dialog-cancel').addEventListener('click', () => dialog.close());
     dialog.addEventListener('cancel', event => {
       if (dialog.querySelector('[type="submit"]').disabled) event.preventDefault();
     });
   }
 
-  function submitChange(dialog, form, errorElement, change) {
+  function submitChange(dialog, form, errorElement, change, onSuccess) {
     const submit = form.querySelector('[type="submit"]');
     if (submit.disabled) return;
     const cancel = dialog.querySelector('.dialog-cancel');
@@ -145,7 +155,7 @@ function initBookmarks(tabs, container) {
     cancel.disabled = true;
     errorElement.textContent = '';
     try {
-      change(() => {
+      change(result => {
         const error = chrome.runtime.lastError;
         submit.disabled = false;
         cancel.disabled = false;
@@ -154,6 +164,7 @@ function initBookmarks(tabs, container) {
           return;
         }
         dialog.close();
+        if (onSuccess) onSuccess(result);
         loadBookmarks();
       });
     } catch (error) {
@@ -162,6 +173,83 @@ function initBookmarks(tabs, container) {
       errorElement.textContent = `操作失败：${error.message}`;
     }
   }
+
+  // 首页目录仅对应书签栏的一级文件夹，“全部”不是真实文件夹。
+  function topLevelFolder(id) {
+    return bar?.children?.find(child => !child.url && child.id === id);
+  }
+
+  function updateFolderActions() {
+    addFolder.disabled = !bar;
+    const folder = topLevelFolder(selectedId);
+    renameFolder.disabled = !folder;
+    removeFolder.disabled = !folder;
+    renameFolder.title = folder ? `重命名目录 ${folder.title || '未命名文件夹'}` : '请选择一个书签目录';
+    removeFolder.title = folder ? `删除目录 ${folder.title || '未命名文件夹'}` : '请选择一个书签目录';
+  }
+
+  function openFolderEditor(folder) {
+    editingFolderId = folder ? folder.id : null;
+    document.getElementById('folder-heading').textContent = folder ? '重命名书签目录' : '新增书签目录';
+    document.getElementById('folder-submit').textContent = folder ? '保存' : '创建';
+    folderTitle.value = folder ? folder.title : '';
+    folderError.textContent = '';
+    folderDialog.showModal();
+    folderTitle.focus();
+  }
+
+  addFolder.addEventListener('click', () => {
+    if (bar) openFolderEditor();
+  });
+  renameFolder.addEventListener('click', () => {
+    const folder = topLevelFolder(selectedId);
+    if (folder) openFolderEditor(folder);
+  });
+  document.getElementById('folder-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const title = folderTitle.value.trim();
+    if (!title) {
+      folderError.textContent = '请输入目录名称。';
+      return;
+    }
+    if (!bar || (editingFolderId && !topLevelFolder(editingFolderId))) {
+      folderError.textContent = '目录已不存在或书签栏不可用，请关闭对话框后重试。';
+      return;
+    }
+    if (editingFolderId) {
+      submitChange(folderDialog, event.currentTarget, folderError, done => {
+        chrome.bookmarks.update(editingFolderId, { title }, done);
+      });
+    } else {
+      submitChange(folderDialog, event.currentTarget, folderError, done => {
+        chrome.bookmarks.create({ parentId: bar.id, title }, done);
+      }, folder => {
+        selectedId = folder.id;
+        container.scrollTop = 0;
+      });
+    }
+  });
+
+  removeFolder.addEventListener('click', () => {
+    const folder = topLevelFolder(selectedId);
+    if (!folder) return;
+    deletingFolderId = folder.id;
+    document.getElementById('delete-folder-name').textContent = folder.title || '未命名文件夹';
+    document.getElementById('delete-folder-warning').textContent =
+      `此目录包含 ${collectBookmarks(folder).length} 个书签（含子目录）。确认后，目录及其全部子目录和书签都会从浏览器书签中删除，无法在此撤销。`;
+    deleteFolderError.textContent = '';
+    deleteFolderDialog.showModal();
+  });
+  document.getElementById('delete-folder-form').addEventListener('submit', event => {
+    event.preventDefault();
+    if (!topLevelFolder(deletingFolderId)) {
+      deleteFolderError.textContent = '目录已不存在或已移出书签栏，请关闭对话框后重试。';
+      return;
+    }
+    submitChange(deleteFolderDialog, event.currentTarget, deleteFolderError, done => {
+      chrome.bookmarks.removeTree(deletingFolderId, done);
+    });
+  });
 
   function openEdit(item) {
     editItem = item;
@@ -266,6 +354,7 @@ function initBookmarks(tabs, container) {
     const hadTabFocus = tabs.contains(document.activeElement);
     const changedTab = selected.id !== selectedId;
     selectedId = selected.id;
+    updateFolderActions();
     tabs.replaceChildren();
     for (const group of groups) {
       const tab = document.createElement('button');
@@ -293,7 +382,9 @@ function initBookmarks(tabs, container) {
     container.setAttribute('aria-labelledby', `bookmark-tab-${selectedId}`);
     renderBookmarks(selected.items, container, { openEdit, openMove, openDelete });
     if (changedTab) container.scrollTop = 0;
-    if (hadTabFocus) document.getElementById(`bookmark-tab-${selectedId}`).focus();
+    const selectedTab = document.getElementById(`bookmark-tab-${selectedId}`);
+    selectedTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (hadTabFocus) selectedTab.focus();
   }
 
   tabs.addEventListener('keydown', event => {
@@ -317,6 +408,8 @@ function initBookmarks(tabs, container) {
       const error = chrome.runtime.lastError;
       if (currentRequest !== requestId) return;
       if (error || !nodes?.[0]) {
+        bar = null;
+        updateFolderActions();
         tabs.replaceChildren();
         container.replaceChildren();
         const message = document.createElement('div');
@@ -379,7 +472,7 @@ function renderBookmarks(items, container, actions) {
     for (const [label, icon, action, className] of [
       ['编辑', '✎', actions.openEdit, ''],
       ['移动', '↕', actions.openMove, ''],
-      ['删除', '🗑', actions.openDelete, 'site-action-danger']
+      ['删除', '×', actions.openDelete, 'site-action-danger']
     ]) {
       const button = document.createElement('button');
       button.type = 'button';

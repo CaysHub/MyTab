@@ -7,21 +7,21 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 13px;
-  color: #333;
-  background: #f5f5f5;
+  color: var(--ink);
+  background: var(--page-bg);
 }
 
 .container {
   width: 360px;
   min-height: 200px;
-  background: #fff;
+  background: var(--surface);
   border-radius: 8px;
   overflow: hidden;
 }
 
 h3 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--surface-hover);
+  color: var(--ink);
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 500;
@@ -29,7 +29,7 @@ h3 {
 
 .section {
   padding: 12px 16px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--rule);
 }
 
 .section:last-of-type {
@@ -40,38 +40,40 @@ label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  color: #555;
+  color: var(--muted);
   font-size: 12px;
 }
 
 select {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   font-size: 13px;
-  background: #fff;
+  background: var(--field-bg);
+  color: var(--ink);
   cursor: pointer;
   outline: none;
   transition: border-color 0.2s;
 }
 
 select:focus {
-  border-color: #667eea;
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
 }
 
 .cookie-list {
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #eee;
+  border: 1px solid var(--rule);
   border-radius: 4px;
-  background: #fafafa;
+  background: var(--field-bg);
 }
 
 .empty-tip {
   padding: 20px;
   text-align: center;
-  color: #999;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -80,8 +82,8 @@ select:focus {
   align-items: center;
   justify-content: space-between;
   padding: 8px 10px;
-  border-bottom: 1px solid #eee;
-  background: #fff;
+  border-bottom: 1px solid var(--rule);
+  background: var(--field-bg);
 }
 
 .cookie-item:last-child {
@@ -95,7 +97,7 @@ select:focus {
 
 .cookie-name {
   font-weight: 500;
-  color: #333;
+  color: var(--ink);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -103,7 +105,7 @@ select:focus {
 }
 
 .cookie-value {
-  color: #666;
+  color: var(--muted);
   font-size: 11px;
   white-space: nowrap;
   overflow: hidden;
@@ -112,15 +114,15 @@ select:focus {
 }
 
 .cookie-domain {
-  color: #999;
+  color: var(--muted);
   font-size: 10px;
   margin-top: 1px;
 }
 
 .btn-copy {
   padding: 4px 10px;
-  background: #667eea;
-  color: white;
+  background: var(--accent);
+  color: var(--on-accent);
   border: none;
   border-radius: 4px;
   font-size: 11px;
@@ -131,11 +133,11 @@ select:focus {
 }
 
 .btn-copy:hover {
-  background: #5a6fd6;
+  background: var(--accent-hover);
 }
 
 .btn-copy.copied {
-  background: #4caf50;
+  background: var(--accent);
 }
 
 .actions {
@@ -154,27 +156,28 @@ select:focus {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--accent-hover);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
   cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: #f0f0f0;
-  color: #555;
-  border: 1px solid #ddd;
+  background: var(--surface-hover);
+  color: var(--ink);
+  border: 1px solid var(--control-border);
 }
 
 .btn-secondary:hover {
-  background: #e5e5e5;
+  background: var(--rule);
 }
 
 .btn-danger {
@@ -185,23 +188,24 @@ select:focus {
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
-  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  color: white;
+  background: var(--danger);
+  color: var(--on-danger);
 }
 
 .btn-danger:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--danger-hover);
 }
 
 .btn-danger:disabled {
-  background: #ccc;
+  background: var(--disabled-bg);
+  color: var(--disabled-ink);
   cursor: not-allowed;
 }
 
 .btn-delete {
   padding: 4px 10px;
-  background: #f44336;
-  color: white;
+  background: var(--danger);
+  color: var(--on-danger);
   border: none;
   border-radius: 4px;
   font-size: 11px;
@@ -212,11 +216,12 @@ select:focus {
 }
 
 .btn-delete:hover {
-  background: #d32f2f;
+  background: var(--danger-hover);
 }
 
 .btn-delete.deleted {
-  background: #4caf50;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .cookie-actions {
@@ -232,23 +237,28 @@ select:focus {
 }
 
 .status.success {
-  color: #4caf50;
-  background: #e8f5e9;
+  color: var(--accent);
+  background: var(--success-bg);
 }
 
 .status.error {
-  color: #f44336;
-  background: #ffebee;
+  color: var(--danger);
+  background: var(--danger-bg);
 }
 
 .loading {
   text-align: center;
   padding: 20px;
-  color: #999;
+  color: var(--muted);
 }
 
 .cookie-count {
   font-size: 11px;
-  color: #999;
+  color: var(--muted);
   margin-top: 4px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

@@ -2,11 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="dark">
+  <link rel="stylesheet" href="theme.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="container">
-    <h3>🍪 Cookie 复制工具</h3>
+    <h3>Cookie 复制工具</h3>
 
     <div class="section">
       <label for="tab-select">选择来源标签页：</label>
@@ -23,12 +25,12 @@
     </div>
 
     <div class="section actions">
-      <button id="refresh-btn" class="btn-secondary">🔄 刷新标签页</button>
-      <button id="copy-all-btn" class="btn-primary" disabled>📋 复制全部到当前页</button>
+      <button id="refresh-btn" class="btn-secondary">↻ 刷新标签页</button>
+      <button id="copy-all-btn" class="btn-primary" disabled>复制全部到当前页</button>
     </div>
 
     <div class="section actions">
-      <button id="delete-all-btn" class="btn-danger" disabled>🗑️ 删除选中页全部Cookie</button>
+      <button id="delete-all-btn" class="btn-danger" disabled>删除选中页全部Cookie</button>
     </div>
 
     <div id="status" class="status"></div>

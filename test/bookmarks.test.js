@@ -49,7 +49,8 @@ class Element {
   showModal() { this.open = true; }
   close() { this.open = false; }
   focus() { this.document.activeElement = this; }
-  click() { this.listeners.click(); }
+  scrollIntoView() {}
+  click() { if (!this.disabled) this.listeners.click(); }
 }
 
 const bar = {
@@ -83,15 +84,18 @@ function setup(initialTree = bar) {
     'bookmark-tabs', 'bookmark-sites', 'date-time', 'date-label', 'clock', 'lunar-date', 'holiday-status',
     'edit-dialog', 'edit-form', 'edit-title', 'edit-url', 'edit-error',
     'move-dialog', 'move-form', 'move-name', 'move-folder', 'move-position', 'move-error',
-    'delete-dialog', 'delete-form', 'delete-name', 'delete-error'
+    'delete-dialog', 'delete-form', 'delete-name', 'delete-error',
+    'add-folder', 'rename-folder', 'remove-folder',
+    'folder-dialog', 'folder-form', 'folder-title', 'folder-heading', 'folder-submit', 'folder-error',
+    'delete-folder-dialog', 'delete-folder-form', 'delete-folder-name', 'delete-folder-warning', 'delete-folder-error'
   ]) {
     elements.set(id, document.createElement('div'));
   }
-  for (const name of ['edit', 'move', 'delete']) {
+  for (const name of ['edit', 'move', 'delete', 'folder', 'delete-folder']) {
     const cancel = document.createElement('button');
     cancel.className = 'dialog-cancel';
     elements.get(`${name}-dialog`).append(cancel);
-    const submit = document.createElement('button');
+    const submit = name === 'folder' ? elements.get('folder-submit') : document.createElement('button');
     submit.type = 'submit';
     elements.get(`${name}-form`).append(submit);
     elements.get(`${name}-dialog`).append(elements.get(`${name}-form`));
@@ -103,9 +107,11 @@ function setup(initialTree = bar) {
     runtime: { lastError: null },
     bookmarks: {
       getSubTree(id, callback) { assert.equal(id, '1'); requests.push(callback); },
+      create(value, callback) { changes.push({ action: 'create', value, callback }); },
       update(id, value, callback) { changes.push({ action: 'update', id, value, callback }); },
       move(id, value, callback) { changes.push({ action: 'move', id, value, callback }); },
       remove(id, callback) { changes.push({ action: 'remove', id, callback }); },
+      removeTree(id, callback) { changes.push({ action: 'removeTree', id, callback }); },
       ...Object.fromEntries(['onCreated', 'onRemoved', 'onChanged', 'onMoved', 'onChildrenReordered', 'onImportEnded']
         .map(name => [name, { addListener(callback) { events[name] = callback; } }]))
     }
@@ -267,4 +273,144 @@ test('delete requires confirmation; cancel does not call the bookmarks API', () 
   changes[1].callback();
   assert.equal(elements.get('delete-dialog').open, false);
   assert.equal(requests.length, 1);
+});
+
+test('all is a fixed overview; only folder tabs enable rename and delete', () => {
+  const { elements, changes } = setup();
+  assert.equal(elements.get('add-folder').disabled, false);
+  assert.equal(elements.get('rename-folder').disabled, true);
+  assert.equal(elements.get('remove-folder').disabled, true);
+  elements.get('rename-folder').click();
+  elements.get('remove-folder').click();
+  assert.equal(changes.length, 0);
+  assert.notEqual(elements.get('folder-dialog').open, true);
+  assert.notEqual(elements.get('delete-folder-dialog').open, true);
+
+  elements.get('bookmark-tabs').children[1].click();
+  assert.equal(elements.get('rename-folder').disabled, false);
+  assert.equal(elements.get('remove-folder').disabled, false);
+  elements.get('bookmark-tabs').children[0].click();
+  assert.equal(elements.get('rename-folder').disabled, true);
+  assert.equal(elements.get('remove-folder').disabled, true);
+});
+
+test('creating a folder uses the bookmarks bar and selects the new empty tab after refresh races', () => {
+  const { elements, changes, requests, events } = setup();
+  elements.get('bookmark-sites').scrollTop = 160;
+  elements.get('add-folder').click();
+  assert.equal(elements.get('folder-heading').textContent, '新增书签目录');
+  elements.get('folder-title').value = ' 新资料 ';
+  submit(elements, 'folder');
+  submit(elements, 'folder');
+  assert.equal(changes.length, 1);
+  assert.deepEqual(JSON.parse(JSON.stringify(changes[0].value)), { parentId: '1', title: '新资料' });
+  assert.equal(elements.get('folder-dialog').querySelector('.dialog-cancel').disabled, true);
+
+  const created = { id: 'new-folder', parentId: '1', title: '新资料', children: [] };
+  const updatedTree = { ...bar, children: [...bar.children, created] };
+  events.onCreated();
+  changes[0].callback(created);
+  requests.pop()([updatedTree]);
+  requests.pop()([bar]);
+  assert.equal(elements.get('folder-dialog').open, false);
+  assert.equal(elements.get('bookmark-tabs').children[3].attributes['aria-selected'], 'true');
+  assert.equal(elements.get('bookmark-tabs').children[3].children[0].textContent, '新资料');
+  assert.equal(elements.get('bookmark-sites').children[0].textContent, '暂无书签');
+  assert.equal(elements.get('bookmark-sites').scrollTop, 0);
+});
+
+test('empty folder names are rejected and create failures leave the dialog available for retry', () => {
+  const { elements, changes, chrome, requests } = setup();
+  elements.get('add-folder').click();
+  elements.get('folder-title').value = '   ';
+  submit(elements, 'folder');
+  assert.equal(changes.length, 0);
+  assert.equal(elements.get('folder-error').textContent, '请输入目录名称。');
+  elements.get('folder-title').value = '资料';
+  submit(elements, 'folder');
+  chrome.runtime.lastError = { message: 'managed bookmarks' };
+  changes[0].callback();
+  chrome.runtime.lastError = null;
+  assert.equal(elements.get('folder-dialog').open, true);
+  assert.equal(elements.get('folder-submit').disabled, false);
+  assert.match(elements.get('folder-error').textContent, /managed bookmarks/);
+  assert.equal(requests.length, 0);
+});
+
+test('renaming only changes the folder title and retains the selected tab and its contents', () => {
+  const { elements, changes, requests } = setup();
+  elements.get('bookmark-tabs').children[1].click();
+  elements.get('bookmark-sites').scrollTop = 120;
+  elements.get('rename-folder').click();
+  assert.equal(elements.get('folder-heading').textContent, '重命名书签目录');
+  assert.equal(elements.get('folder-title').value, '工作');
+  elements.get('folder-title').value = ' 工作资料 ';
+  submit(elements, 'folder');
+  assert.deepEqual(JSON.parse(JSON.stringify({ action: changes[0].action, id: changes[0].id, value: changes[0].value })), {
+    action: 'update', id: 'folder-a', value: { title: '工作资料' }
+  });
+  changes[0].callback();
+  requests.shift()([{ ...bar, children: bar.children.map(child => child.id === 'folder-a' ? { ...child, title: '工作资料' } : child) }]);
+  const tab = elements.get('bookmark-tabs').children[1];
+  assert.equal(tab.attributes['aria-selected'], 'true');
+  assert.equal(tab.children[0].textContent, '工作资料');
+  assert.deepEqual(titles(elements.get('bookmark-sites')), ['项目', '文档', '脚本']);
+  assert.equal(elements.get('bookmark-sites').scrollTop, 120);
+});
+
+test('folder deletion names the target and counts descendants; cancellation is safe and confirmation removes the tree', () => {
+  const { elements, changes, requests } = setup();
+  elements.get('bookmark-tabs').children[1].click();
+  elements.get('remove-folder').click();
+  assert.equal(elements.get('delete-folder-name').textContent, '工作');
+  assert.match(elements.get('delete-folder-warning').textContent, /3 个书签/);
+  assert.match(elements.get('delete-folder-warning').textContent, /全部子目录和书签/);
+  assert.equal(changes.length, 0);
+  elements.get('delete-folder-dialog').querySelector('.dialog-cancel').click();
+  assert.equal(changes.length, 0);
+  elements.get('remove-folder').click();
+  submit(elements, 'delete-folder');
+  submit(elements, 'delete-folder');
+  assert.equal(changes.length, 1);
+  assert.deepEqual({ action: changes[0].action, id: changes[0].id }, { action: 'removeTree', id: 'folder-a' });
+  let escapeBlocked = false;
+  elements.get('delete-folder-dialog').listeners.cancel({ preventDefault() { escapeBlocked = true; } });
+  assert.equal(escapeBlocked, true);
+  changes[0].callback();
+  requests.shift()([{ ...bar, children: bar.children.filter(child => child.id !== 'folder-a') }]);
+  assert.equal(elements.get('delete-folder-dialog').open, false);
+  assert.equal(elements.get('bookmark-tabs').children[0].attributes['aria-selected'], 'true');
+  assert.deepEqual(titles(elements.get('bookmark-sites')), ['根目录']);
+  assert.equal(elements.get('remove-folder').disabled, true);
+});
+
+test('empty folders can be deleted and API errors keep confirmation open for retry', () => {
+  const { elements, changes, chrome } = setup();
+  elements.get('bookmark-tabs').children[2].click();
+  elements.get('remove-folder').click();
+  assert.match(elements.get('delete-folder-warning').textContent, /0 个书签/);
+  submit(elements, 'delete-folder');
+  assert.equal(changes[0].id, 'folder-b');
+  chrome.runtime.lastError = { message: 'read only folder' };
+  changes[0].callback();
+  chrome.runtime.lastError = null;
+  assert.equal(elements.get('delete-folder-dialog').open, true);
+  assert.match(elements.get('delete-folder-error').textContent, /read only folder/);
+  assert.equal(elements.get('delete-folder-dialog').querySelector('[type="submit"]').disabled, false);
+});
+
+test('external removal prevents submitting stale folder rename or deletion dialogs', () => {
+  for (const [button, form, error] of [
+    ['rename-folder', 'folder', 'folder-error'],
+    ['remove-folder', 'delete-folder', 'delete-folder-error']
+  ]) {
+    const { elements, events, requests, changes } = setup();
+    elements.get('bookmark-tabs').children[1].click();
+    elements.get(button).click();
+    events.onRemoved();
+    requests.shift()([{ ...bar, children: bar.children.filter(child => child.id !== 'folder-a') }]);
+    submit(elements, form);
+    assert.equal(changes.length, 0);
+    assert.match(elements.get(error).textContent, /目录已不存在/);
+  }
 });

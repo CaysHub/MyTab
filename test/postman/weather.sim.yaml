@@ -1,0 +1,5 @@
+simulation: mytab-weather
+routing: path
+mocks:
+  - routeKey: uapi
+    path: uapi/config.yaml

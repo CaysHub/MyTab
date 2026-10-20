@@ -1,0 +1,7 @@
+version: 1
+name: mytab-uapi-weather
+description: Based on UAPI public district/weather docs and responses checked on 2026-10-19.
+interceptRequests: true
+scenarios:
+  - name: default
+    path: default.js

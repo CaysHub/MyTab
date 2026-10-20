@@ -90,13 +90,14 @@ async function loadTabs() {
       select.lastElementChild.appendChild(option);
     });
 
-    // 恢复之前的选择
-    if (currentSelectValue) {
-      select.value = currentSelectValue;
-    }
+    // 保留已有的有效选择；首次打开或原标签页已关闭时，默认选择当前标签页。
+    const selectedTab = validTabs.find(tab => String(tab.id) === currentSelectValue)
+      || validTabs.find(tab => tab.id === currentTabId);
+    select.value = selectedTab ? String(selectedTab.id) : '';
 
     status.textContent = `已加载 ${validTabs.length} 个标签页`;
     status.className = 'status success';
+    await onTabSelect({ target: select });
 
   } catch (error) {
     console.error('加载标签页失败:', error);
@@ -342,7 +343,7 @@ async function copyAllCookies() {
   }
 
   copyAllBtn.disabled = false;
-  copyAllBtn.textContent = '📋 复制全部到当前页';
+  copyAllBtn.textContent = '复制全部到当前页';
 
   if (failCount === 0) {
     showStatus(`成功复制 ${successCount} 个 Cookies！ (含剪贴板)`, 'success');
@@ -436,7 +437,7 @@ async function deleteAllCookies() {
   // 更新按钮状态
   document.getElementById('copy-all-btn').disabled = true;
   deleteAllBtn.disabled = true;
-  deleteAllBtn.textContent = '🗑️ 删除选中页全部Cookie';
+  deleteAllBtn.textContent = '删除选中页全部Cookie';
 
   if (failCount === 0) {
     showStatus(`成功删除 ${successCount} 个 Cookies！`, 'success');

@@ -3,6 +3,9 @@
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  const theme = getComputedStyle(document.documentElement);
+  const networkColor = theme.getPropertyValue('--network-rgb').trim();
+  const accentColor = theme.getPropertyValue('--accent-rgb').trim();
   const linkDistance = 142;
   const mouseDistance = 180;
   let width = 0;
@@ -69,7 +72,7 @@
     }
   }
 
-  function line(a, b, opacity, color = '31, 43, 38') {
+  function line(a, b, opacity, color = networkColor) {
     ctx.strokeStyle = `rgba(${color}, ${opacity})`;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -120,7 +123,7 @@
         const distanceSquared = dx * dx + dy * dy;
         if (distanceSquared < mouseDistance * mouseDistance) {
           const strength = 1 - Math.sqrt(distanceSquared) / mouseDistance;
-          line(particle, pointer, Math.pow(strength, 1.2) * .55, '25, 118, 91');
+          line(particle, pointer, Math.pow(strength, 1.2) * .55, accentColor);
         }
       }
     }
@@ -132,8 +135,8 @@
         influence = Math.max(0, 1 - distance / mouseDistance);
       }
       ctx.fillStyle = influence > 0
-        ? `rgba(25, 118, 91, ${.55 + influence * .35})`
-        : 'rgba(31, 43, 38, .58)';
+        ? `rgba(${accentColor}, ${.55 + influence * .35})`
+        : `rgba(${networkColor}, .58)`;
       ctx.beginPath();
       ctx.arc(particle.x, particle.y, particle.radius + influence * .65, 0, Math.PI * 2);
       ctx.fill();
@@ -148,7 +151,7 @@
       const opacity = .85 * fade * fade;
       ctx.beginPath();
       ctx.arc(ripple.x, ripple.y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(25, 118, 91, ${opacity})`;
+      ctx.strokeStyle = `rgba(${accentColor}, ${opacity})`;
       ctx.lineWidth = .25 + fade * 1.75;
       ctx.stroke();
     }

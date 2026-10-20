@@ -22,7 +22,8 @@
         "cookies",
         "tabs",
         "activeTab",
-        "bookmarks"
+        "bookmarks",
+        "geolocation"
     ],
     "host_permissions": [
         "<all_urls>"

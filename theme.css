@@ -1,0 +1,41 @@
+:root {
+  color-scheme: dark;
+  --page-bg: #111111;
+  --surface: #1b1b1b;
+  --surface-hover: #292929;
+  --field-bg: #141414;
+  --ink: #eeeeee;
+  --muted: #aaaaaa;
+  --rule: #333333;
+  --control-border: #666666;
+  --accent: #e5e5e5;
+  --accent-hover: #ffffff;
+  --on-accent: #161616;
+  --holiday: #d0d0d0;
+  --danger: #cccccc;
+  --danger-hover: #eeeeee;
+  --on-danger: #171717;
+  --danger-bg: #2b2b2b;
+  --danger-border: #777777;
+  --success-bg: #222222;
+  --disabled-bg: #2d2d2d;
+  --disabled-ink: #969696;
+  --network-rgb: 160, 160, 160;
+  --accent-rgb: 220, 220, 220;
+  background: var(--page-bg);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) var(--page-bg);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+select option, select optgroup {
+  background: var(--field-bg);
+  color: var(--ink);
+}
